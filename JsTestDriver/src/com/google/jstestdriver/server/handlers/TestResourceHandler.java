@@ -52,18 +52,32 @@ class TestResourceHandler implements RequestHandler {
   @Override
   public void handleIt() throws IOException {
     String fileName = request.getPathInfo().substring(1); /* remove the first / */
-    response.setCharacterEncoding("UTF-8");
-    service(fileName, response.getWriter());
+    service(fileName);
   }
 
-  public void service(String fileName, PrintWriter writer) throws IOException {
+  public void service(String fileName) throws IOException {
     try {
-      String fileContent = store.getFileContent(fileName);
       String parsedMimeType = parseMimeType(fileName);
       String mimeType = parsedMimeType == null ? "text/plain" : parsedMimeType;
-      response.setContentType(mimeType);
-      writer.write(fileContent);
-      writer.flush();
+	  response.setContentType(mimeType);
+
+	  byte[] rawData = store.getFileRawData(fileName);
+	  if (rawData != null) {
+		response.setHeader("Accept-Ranges", "bytes");
+		response.setContentLength(rawData.length);
+
+		response.getOutputStream().write(rawData, 0, rawData.length);
+		response.getOutputStream().flush();
+	  }
+	  else {
+		PrintWriter writer = new PrintWriter(response.getWriter());
+
+		response.setCharacterEncoding("UTF-8");
+		String fileContent = store.getFileContent(fileName);
+
+		writer.write(fileContent);
+		writer.flush();
+	  }
     } catch (FilesCache.MissingFileException e) {
       response.sendError(HttpServletResponse.SC_NOT_FOUND);
     }

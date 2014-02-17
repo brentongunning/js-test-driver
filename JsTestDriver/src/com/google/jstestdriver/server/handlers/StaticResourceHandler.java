@@ -49,7 +49,7 @@ public class StaticResourceHandler implements RequestHandler {
       .put("kml", "application/vnd.google-earth.kml+xml")
       .put("kmz", "application/vnd.google-earth.kmz")
       .put("pdf", "application/pdf")
-      .put("png", "text/png")
+      .put("png", "image/png")
       .put("rdf", "application/rdf+xml")
       .put("tif", "image/tiff")
       .put("tiff", "image/tiff")

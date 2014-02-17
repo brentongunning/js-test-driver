@@ -22,6 +22,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -41,6 +44,7 @@ public class FileInfo implements Cloneable {
   private boolean serveOnly;
   private List<FileInfo> patches;
   private String data;
+  private byte[] rawData;
 
   private long length;
 
@@ -49,6 +53,7 @@ public class FileInfo implements Cloneable {
   public FileInfo() {
   }
 
+  
   public FileInfo(String filePath, long timestamp, long length,
       boolean isPatch, boolean serveOnly, String data, String displayPath) {
     this.filePath = filePath;
@@ -58,6 +63,20 @@ public class FileInfo implements Cloneable {
     this.serveOnly = serveOnly;
     this.data = data;
     this.displayPath = displayPath;
+
+    loadRawData();
+  }
+  
+  public FileInfo(String filePath, long timestamp, long length,
+      boolean isPatch, boolean serveOnly, String data, byte[] rawData, String displayPath) {
+    this.filePath = filePath;
+    this.timestamp = timestamp;
+    this.length = length;
+    this.isPatch = isPatch;
+    this.serveOnly = serveOnly;
+    this.data = data;
+    this.rawData = rawData;
+    this.displayPath = displayPath;
   }
 
   public String getData() {
@@ -66,6 +85,14 @@ public class FileInfo implements Cloneable {
 
   public void setData(String data) {
     this.data = data;
+  }
+  
+  public byte[] getRawData() {
+    return rawData;
+  }
+
+  public void setRawData(byte[] rawData) {
+    this.rawData = rawData;
   }
 
   public List<FileInfo> getPatches() {
@@ -179,7 +206,7 @@ public class FileInfo implements Cloneable {
    */
   public FileInfo fromResolvedPath(String resolvedPath, String displayPath, long timestamp) {
     return new FileInfo(resolvedPath, timestamp,
-      length, isPatch, serveOnly, data, displayPath);
+      length, isPatch, serveOnly, data, rawData, displayPath);
   }
 
   /**
@@ -207,12 +234,13 @@ public class FileInfo implements Cloneable {
         fileContent.append(reader.readFile(patch.getFilePath()));
       }
     }
+	
     return load(fileContent.toString(), timestamp);
   }
 
   @Override
   protected Object clone() throws CloneNotSupportedException {
-    return new FileInfo(filePath, timestamp, length, isPatch, serveOnly, data, displayPath);
+    return new FileInfo(filePath, timestamp, length, isPatch, serveOnly, data, rawData, displayPath);
   }
 
   /**
@@ -233,5 +261,35 @@ public class FileInfo implements Cloneable {
       return true;
     }*/
     return false;
+  }
+  
+  private void loadRawData() {
+    List<String> dataExtensions = Arrays.asList(
+      "bmp", "gif", "ico", "jpe", "jpeg", "jpg", "pdf",
+      "png", "tif", "tiff", "wav", "xml");
+
+    int extensionIndex = filePath.lastIndexOf(".");
+    if (extensionIndex == -1) {
+      return;
+    }
+	String extension = filePath.substring(extensionIndex + 1);
+
+	if (dataExtensions.contains(extension)) {
+	  this.rawData = null;
+	  try {
+		File file = new File(filePath);
+		int length = (int)file.length();
+		this.rawData = new byte[length];  
+		InputStream in = new FileInputStream(file);  
+		int offset = 0;  
+		while (offset < length) {  
+          int count = in.read(this.rawData, offset, (length - offset));  
+          offset += count;
+		}
+		in.close();
+	  } catch (Exception e) {
+		// No-op
+	  }
+	}
   }
 }

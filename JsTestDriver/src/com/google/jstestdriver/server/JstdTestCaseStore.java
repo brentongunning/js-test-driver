@@ -116,6 +116,13 @@ public class JstdTestCaseStore {
   public String getFileContent(String path) {
     return files.getFileContent(path);
   }
+  
+  /**
+   * Returns the raw bytes of a given filename.
+   */
+  public byte[] getFileRawData(String path) {
+    return files.getFileRawData(path);
+  }
 
   /**
    * Applies a JstdTestCaseDelta to the file cache and all test cases.

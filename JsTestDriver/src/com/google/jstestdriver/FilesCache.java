@@ -43,6 +43,14 @@ public class FilesCache {
     }
     return info.getData();
   }
+  
+  public synchronized byte[] getFileRawData(String fileName) {
+    FileInfo info = files.get(fileName);
+    if (info == null) {
+      throw new MissingFileException();
+    }
+    return info.getRawData();
+  }
 
   public synchronized void clear() {
     files.clear();
